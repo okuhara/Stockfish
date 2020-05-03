@@ -35,7 +35,7 @@ Bitboard PawnAttacks[COLOR_NB][SQUARE_NB];
 Magic RookMagics[SQUARE_NB];
 Magic BishopMagics[SQUARE_NB];
 
-#ifdef __AVX2__
+#ifdef USE_AVX2
 __m256i queen_mask_v4[SQUARE_NB][2];
 __m128i rook_mask_NS[SQUARE_NB];
 uint8_t rook_attacks_EW[64 * 8];
@@ -91,7 +91,7 @@ void Bitboards::init() {
   init_magics(RookTable, RookMagics, RookDirections);
   init_magics(BishopTable, BishopMagics, BishopDirections);
 
-#ifdef __AVX2__
+#ifdef USE_AVX2
 
   Direction vecDirections[2][4] = {{ EAST, NORTH, NORTH_EAST, NORTH_WEST }, { WEST, SOUTH, SOUTH_WEST, SOUTH_EAST }};
   Bitboard vecAttacks[4];
@@ -137,7 +137,7 @@ void Bitboards::init() {
       rook_attacks_EW[occ * 4 + sq] = attack;
     }
 
-#endif
+#endif // USE_AVX2
 
   for (Square s1 = SQ_A1; s1 <= SQ_H8; ++s1)
   {

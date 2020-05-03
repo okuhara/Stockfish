@@ -63,6 +63,7 @@ endif
 # prefetch = yes/no   --- -DUSE_PREFETCH   --- Use prefetch asm-instruction
 # popcnt = yes/no     --- -DUSE_POPCNT     --- Use popcnt asm-instruction
 # sse = yes/no        --- -msse            --- Use Intel Streaming SIMD Extensions
+# avx2 = yes/no       --- -DUSE_AVX2       --- Use Intel Advanced Vector Extensions
 # pext = yes/no       --- -DUSE_PEXT       --- Use pext x86_64 asm-instruction
 #
 # Note that Makefile is space sensitive, so when adding new architectures
@@ -77,6 +78,7 @@ bits = 32
 prefetch = no
 popcnt = no
 sse = no
+avx2 = no
 pext = no
 
 ### 2.2 Architecture specific
@@ -107,12 +109,21 @@ ifeq ($(ARCH),x86-64)
 	sse = yes
 endif
 
+ifeq ($(ARCH),x86-64-popcnt)
+	arch = x86_64
+	bits = 64
+	prefetch = yes
+	popcnt = yes
+	sse = yes
+endif
+
 ifeq ($(ARCH),x86-64-modern)
 	arch = x86_64
 	bits = 64
 	prefetch = yes
 	popcnt = yes
 	sse = yes
+        avx2 = yes
 endif
 
 ifeq ($(ARCH),x86-64-bmi2)
@@ -324,15 +335,23 @@ ifeq ($(popcnt),yes)
 	endif
 endif
 
-### 3.7 pext
-ifeq ($(pext),yes)
-	CXXFLAGS += -DUSE_PEXT
+### 3.7 avx2
+ifeq ($(avx2),yes)
+	CXXFLAGS += -DUSE_AVX2
 	ifeq ($(comp),$(filter $(comp),gcc clang mingw))
-		CXXFLAGS += -mavx2 -mbmi2
+		CXXFLAGS += -mavx2
 	endif
 endif
 
-### 3.8 Link Time Optimization, it works since gcc 4.5 but not on mingw under Windows.
+### 3.8 pext
+ifeq ($(pext),yes)
+	CXXFLAGS += -DUSE_PEXT
+	ifeq ($(comp),$(filter $(comp),gcc clang mingw))
+		CXXFLAGS += -msse4 -mbmi2
+	endif
+endif
+
+### 3.9 Link Time Optimization, it works since gcc 4.5 but not on mingw under Windows.
 ### This is a mix of compile and link time options because the lto link phase
 ### needs access to the optimization flags.
 ifeq ($(optimize),yes)
@@ -351,7 +370,7 @@ ifeq ($(debug), no)
 endif
 endif
 
-### 3.9 Android 5 can only run position independent executables. Note that this
+### 3.10 Android 5 can only run position independent executables. Note that this
 ### breaks Android 4.0 and earlier.
 ifeq ($(OS), Android)
 	CXXFLAGS += -fPIE
@@ -379,8 +398,9 @@ help:
 	@echo ""
 	@echo "Supported archs:"
 	@echo ""
-	@echo "x86-64-bmi2             > x86 64-bit with pext support (also enables SSE4)"
-	@echo "x86-64-modern           > x86 64-bit with popcnt support (also enables SSE3)"
+	@echo "x86-64-bmi2             > x86 64-bit with pext support (best for most Intel)"
+	@echo "x86-64-modern           > x86 64-bit with avx2 support (best for modern AMD)"
+	@echo "x86-64-popcnt           > x86 64-bit with popcnt support (best for older AMD)"
 	@echo "x86-64                  > x86 64-bit generic"
 	@echo "x86-32                  > x86 32-bit (also enables SSE)"
 	@echo "x86-32-old              > x86 32-bit fall back for old hardware"
@@ -475,6 +495,7 @@ config-sanity:
 	@echo "prefetch: '$(prefetch)'"
 	@echo "popcnt: '$(popcnt)'"
 	@echo "sse: '$(sse)'"
+	@echo "avx2: '$(avx2)'"
 	@echo "pext: '$(pext)'"
 	@echo ""
 	@echo "Flags:"
@@ -493,6 +514,7 @@ config-sanity:
 	@test "$(prefetch)" = "yes" || test "$(prefetch)" = "no"
 	@test "$(popcnt)" = "yes" || test "$(popcnt)" = "no"
 	@test "$(sse)" = "yes" || test "$(sse)" = "no"
+	@test "$(avx2)" = "yes" || test "$(avx2)" = "no"
 	@test "$(pext)" = "yes" || test "$(pext)" = "no"
 	@test "$(comp)" = "gcc" || test "$(comp)" = "icc" || test "$(comp)" = "mingw" || test "$(comp)" = "clang"
 

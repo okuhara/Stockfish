@@ -73,11 +73,8 @@
 #  include <xmmintrin.h> // Intel and Microsoft header for _mm_prefetch()
 #endif
 
-#if defined(USE_PEXT)
+#if defined(USE_AVX2) || defined(USE_PEXT)
 #  include <immintrin.h> // Header for _pext_u64() intrinsic
-#  define pext(b, m) _pext_u64(b, m)
-#else
-#  define pext(b, m) 0
 #endif
 
 #ifdef USE_POPCNT
@@ -88,8 +85,10 @@ constexpr bool HasPopCnt = false;
 
 #ifdef USE_PEXT
 constexpr bool HasPext = true;
+#  define pext(b, m) _pext_u64(b, m)
 #else
 constexpr bool HasPext = false;
+#  define pext(b, m) 0
 #endif
 
 #ifdef IS_64BIT

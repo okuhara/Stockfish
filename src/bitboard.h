@@ -278,7 +278,7 @@ inline Bitboard attacks_bb(Square s, Bitboard occupied) {
   return m.attacks[m.index(occupied)];
 }
 
-#ifdef __AVX2__
+#ifdef USE_AVX2
 /// AVX2 (non-magic) bitboard
 
 extern __m256i queen_mask_v4[SQUARE_NB][2];
@@ -379,7 +379,7 @@ template<> inline Bitboard attacks_bb<BISHOP>(Square s, Bitboard occupied)
   return _mm_cvtsi128_si64(_mm_or_si128(slide2, _mm_shuffle_epi8(slide2, swaph2l)));
 }
 
-#endif // __AVX2__
+#endif // USE_AVX2
 
 inline Bitboard attacks_bb(PieceType pt, Square s, Bitboard occupied) {
 
