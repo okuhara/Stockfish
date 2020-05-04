@@ -314,10 +314,11 @@ template<> inline Bitboard attacks_bb<QUEEN>(Square s, Bitboard occupied)
 #else
   slide4 = _mm256_and_si256(blsmsk64x4(slide4), lmask);
     // Right bits: set shadow bits lower than occupied MS1B (6 bits max)
-  __m256i shadow = _mm256_srlv_epi64(_mm256_and_si256(occupied4, rmask), _mm256_set_epi64x(7, 9, 8, 1));
-  shadow = _mm256_or_si256(shadow, _mm256_srlv_epi64(shadow, _mm256_set_epi64x(7, 9, 8, 1)));  // PP Fill
-  shadow = _mm256_or_si256(shadow, _mm256_srlv_epi64(shadow, _mm256_set_epi64x(14, 18, 16, 2)));
-  shadow = _mm256_or_si256(shadow, _mm256_srlv_epi64(shadow, _mm256_set_epi64x(14, 18, 16, 2)));
+  __m256i shadow = _mm256_and_si256(occupied4, rmask);
+  shadow = _mm256_or_si256(_mm256_srlv_epi64(shadow, _mm256_set_epi64x(14, 18, 16, 2)),  // PP Fill
+    _mm256_srlv_epi64(shadow, _mm256_set_epi64x(7, 9, 8, 1)));
+  shadow = _mm256_or_si256(_mm256_srlv_epi64(shadow, _mm256_set_epi64x(28, 36, 32, 4)),
+    _mm256_or_si256(shadow, _mm256_srlv_epi64(shadow, _mm256_set_epi64x(14, 18, 16, 2))));
     // add mask bits higher than blocker
   slide4 = _mm256_or_si256(slide4, _mm256_andnot_si256(shadow, rmask));
 #endif
